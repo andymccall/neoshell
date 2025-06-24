@@ -5,6 +5,12 @@ str_cmd_clear:
     .asciiz "clear"
 str_cmd_exit:
     .asciiz "exit"
+str_cmd_echo:
+    .asciiz "echo"
+str_cmd_ls:
+    .asciiz "ls"
+str_cmd_cwd:
+    .asciiz "cwd"
 
 command_table:
     .word str_cmd_help          ; String to match
@@ -13,6 +19,12 @@ command_table:
     .word do_clear_screen       ; Address of the handler function
     .word str_cmd_exit          ; String to match
     .word do_exit               ; Address of the handler function
+    .word str_cmd_echo          ; String to match
+    .word do_echo               ; Address of the handler function
+    .word str_cmd_ls            ; String to match
+    .word do_ls                 ; Address of the handler function
+    .word str_cmd_cwd            ;
+    .word do_cwd
     .word 0                     ; End of table marker
 
 ;-------------------------------------------------------------------

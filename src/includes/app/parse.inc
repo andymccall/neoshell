@@ -43,41 +43,26 @@ parse_input:
     lda command_table+1, y
     sta ZP_PTR_HI
     
-    ; Compare user input with table command
+    ; Compare user input (from X) with table command
     phx                     ; Save user's buffer index (X)
     phy                     ; Save command table index (Y)
 
-    ldy #0                  ; Use Y as the shared string index for comparison
+    ldy #0                  ; Use inner Y as the shared string index
 @compare_loop:
     lda (ZP_PTR_LO), y      ; Get char from table command
-    pha                     ; Save it
+    beq @command_part_matched ; If it's null, the command word matches.
+
     lda INPUT_BUFFER, x     ; Get char from user input
-    cmp (ZP_PTR_LO), y      ; Compare user char with table char
+    cmp (ZP_PTR_LO), y      ; Compare them
     bne @no_match           ; If different, it's not a match
 
-    ; Characters match. If it was null, both strings have ended. Match!
-    pla                     ; Restore table char
-    beq @match_found
-
-    ; Not null, so continue
+    ; Characters match, so continue
     inx
     iny
     jmp @compare_loop
     
-@no_match:
-    pla                     ; Balance stack
-    ply                     ; Restore command table index (Y)
-    plx                     ; Restore user buffer index (X)
-    
-    ; Advance Y to the next command entry and try again
-    tya
-    clc
-    adc #4
-    tay
-    jmp @command_loop
-
-@match_found:
-    ; We have a match, but we need to ensure the user's token ALSO ends here.
+@command_part_matched:
+    ; The command word matches. Check if the user's token ends here.
     lda INPUT_BUFFER, x
     cmp #' '
     beq @execute_match
@@ -86,10 +71,23 @@ parse_input:
     ; If it doesn't end here (e.g., user typed "clears"), it's not a match
     jmp @no_match
 
-@execute_match:
-    ply                     ; Restore original command table index Y
-    plx                     ; Restore original buffer index X
+@no_match:
+    ply                     ; Restore command table index (Y)
+    plx                     ; Restore user buffer index (X)
+    
+    ; Advance Y to the next command entry in the table
+    tya
+    clc
+    adc #4
+    tay
+    jmp @command_loop
 
+@execute_match:
+    ; We have a valid match. X now points to the start of the arguments.
+    ply                     ; Restore original command table index Y
+    pla                     ; *** FIX: Pop the original X off the stack and discard it.
+                            ; The X register now correctly holds the argument pointer.
+    
     ; Get the handler address (offset is original Y + 2 bytes)
     tya
     clc
@@ -101,6 +99,7 @@ parse_input:
     lda command_table, y    ; Get handler high byte
     sta ZP_JUMP_VEC+1
     
+    ; X correctly points to the start of the arguments.
     jsr execute_handler
     rts                     ; Command finished, return from parser
 

@@ -88,6 +88,9 @@ API_FN_DIR_READ       = $12 ; API function
 API_FN_DIR_CLOSE      = $13 ; API function
 API_FN_FILE_COPY      = $14 ; API function
 API_FN_LIST_FILTERED  = $20 ; API function
+API_FN_SET_FILE_ATTR  = $15
+API_FN_CHECK_EOF      = $16
+API_FN_DIR_CWD        = $17
 
 ; File I/O parameters (Group 3 Function 2)
 API_FILE_TO_SCREEN = $FFFF ; API parameter

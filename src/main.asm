@@ -20,6 +20,9 @@
    .include "includes/app/commands.inc"
    .include "includes/app/clear.inc"
    .include "includes/app/exit.inc"
+   .include "includes/app/echo.inc"
+   .include "includes/app/ls.inc"
+   .include "includes/app/cwd.inc"
 
 ;---------------------------------------------------------------
 ; Menu equates
