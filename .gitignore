@@ -1,0 +1,30 @@
+
+# Commander X16
+*.elf
+*.PRG
+*.prg
+*.list
+*.lst
+lst
+bin
+obj
+
+# NEO6502
+*.neo
+storage
+*.dump
+*.list
+*.lst
+*.map
+lst
+bin
+obj
+map
+
+# Agon Light 2
+bin
+obj
+
+.DS_Store
+.idea
+.vscode
