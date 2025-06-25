@@ -40,6 +40,12 @@ The project is in the early stages of development. The core command parser and d
 
 * `echo [args]`: Prints arguments to the screen.
 
+* `ls`: Lists the currect directory contents
+
+* `cd <dir>`: Changes to the directory given in the argument
+
+* `mkdir <dir>`: Creates the directory given in the argument.
+
 * `cwd`: Displays the current working directory.
 
 * `exit`: Halts the shell.
