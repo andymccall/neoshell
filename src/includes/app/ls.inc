@@ -12,95 +12,51 @@ str_open_dir_err:
 ;              list the root directory "/".
 ;-------------------------------------------------------------------
 do_ls:
-    ; --- Step 1: Open the directory ---
-    ; Set up API parameters for API_FN_DIR_OPEN
+    ; This function uses API_FN_LIST_DIRECTORY. We assume it takes
+    ; a pointer to a path string (params 0,1) and a pointer to a
+    ; destination buffer (params 2,3) where it will write the
+    ; complete, formatted directory listing.
+
+    ; --- Step 1: Clear the destination buffer ---
+    ldx #0
+@clear_ls_buf:
+    lda #0
+    sta DIR_ENTRY_BUFFER, x
+    inx
+    cpx #INPUT_BUFFER_SIZE  ; Reusing this size constant for now
+    bne @clear_ls_buf
+
+    ; --- Step 2: Set up API parameters ---
     ; Param 0-1: Pointer to the directory path string
     lda #<str_root_dir
     sta API_PARAMETERS+0
     lda #>str_root_dir
     sta API_PARAMETERS+1
-    
-    ; Issue the command
-    lda #API_FN_DIR_OPEN
-    sta API_FUNCTION
-@wait_ls_open_ready:
-    lda API_COMMAND
-    bne @wait_ls_open_ready
-    lda #API_GROUP_FILEIO
-    sta API_COMMAND
-@wait_ls_open_done:
-    lda API_COMMAND
-    bne @wait_ls_open_done
-    
-    ; The directory handle is now in API_PARAMETERS+0.
-    ; A value of 0 means an error occurred.
-    lda API_PARAMETERS+0
-    beq @ls_error
-    
-    sta ZP_TEMP             ; Store the handle in our temp variable
-
-    ; --- Step 2: Read directory entries in a loop ---
-@read_dir_loop:
-    ; Set up API parameters for API_FN_DIR_READ
-    ; Param 0: The directory handle
-    ; Param 1-2: Pointer to the buffer to receive entry data
-    lda ZP_TEMP
-    sta API_PARAMETERS+0
+    ; Param 2-3: Pointer to the destination buffer
     lda #<DIR_ENTRY_BUFFER
-    sta API_PARAMETERS+1
-    lda #>DIR_ENTRY_BUFFER
     sta API_PARAMETERS+2
+    lda #>DIR_ENTRY_BUFFER
+    sta API_PARAMETERS+3
 
-    ; Issue the command
-    lda #API_FN_DIR_READ
+    ; --- Step 3: Issue the command ---
+    lda #API_FN_LIST_DIRECTORY
     sta API_FUNCTION
-@wait_ls_read_ready:
+@wait_ls_api_ready:
     lda API_COMMAND
-    bne @wait_ls_read_ready
+    bne @wait_ls_api_ready
     lda #API_GROUP_FILEIO
     sta API_COMMAND
-@wait_ls_read_done:
+@wait_ls_api_done:
     lda API_COMMAND
-    bne @wait_ls_read_done
+    bne @wait_ls_api_done
 
-    ; The result is in API_PARAMETERS+0. 0 means end of directory.
-    lda API_PARAMETERS+0
-    beq @ls_close           ; If 0, no more files, so close the dir.
-    
-    ; The filename is a null-terminated string at the start of DIR_ENTRY_BUFFER
+    ; --- Step 4: Print the result ---
+    ; The result from the API should now be in DIR_ENTRY_BUFFER.
     lda #<DIR_ENTRY_BUFFER
     sta ZP_PTR_LO
     lda #>DIR_ENTRY_BUFFER
     sta ZP_PTR_HI
     jsr br_text_print_string
-    jsr br_text_print_new_line
-
-    jmp @read_dir_loop      ; Go back to read the next entry.
-
-@ls_error:
-    ; Print an error message
-    lda #<str_open_dir_err
-    sta ZP_PTR_LO
-    lda #>str_open_dir_err
-    sta ZP_PTR_HI
-    jsr br_text_print_string
-    jsr br_text_print_new_line
-    ; Fall through to close, which is safe even with a null handle.
-
-@ls_close:
-    ; --- Step 3: Close the directory ---
-    lda ZP_TEMP             ; The handle is still in ZP_TEMP
-    sta API_PARAMETERS+0
-    
-    lda #API_FN_DIR_CLOSE
-    sta API_FUNCTION
-@wait_ls_close_ready:
-    lda API_COMMAND
-    bne @wait_ls_close_ready
-    lda #API_GROUP_FILEIO
-    sta API_COMMAND
-@wait_ls_close_done:
-    lda API_COMMAND
-    bne @wait_ls_close_done
+    ; No extra newline needed if the API provides a formatted list.
     
     rts

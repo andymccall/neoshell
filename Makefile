@@ -33,6 +33,7 @@ clean:
 run:
 	@echo "Launching emulator..."
 	mkdir -p storage
+	cp assets/test.txt storage
 	cp bin/$(NAME).neo storage
 	$(NEOEMU) bin/$(NAME).neo cold
 	rm -rf storage
@@ -41,6 +42,7 @@ run:
 run-debug:
 	@echo "Launching emulator..."
 	mkdir -p storage
+	cp assets/test.txt storage
 	cp bin/$(NAME).neo storage
 	$(NEOEMU)
 	rm -rf storage

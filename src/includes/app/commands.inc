@@ -11,6 +11,12 @@ str_cmd_ls:
     .asciiz "ls"
 str_cmd_cwd:
     .asciiz "cwd"
+str_cmd_mkdir:
+    .asciiz "mkdir"
+str_cmd_cd:
+    .asciiz "cd"
+str_cmd_cat:
+    .asciiz "cat"
 
 command_table:
     .word str_cmd_help          ; String to match
@@ -25,6 +31,12 @@ command_table:
     .word do_ls                 ; Address of the handler function
     .word str_cmd_cwd            ;
     .word do_cwd
+    .word str_cmd_mkdir
+    .word do_mkdir
+    .word str_cmd_cd
+    .word do_cd
+    .word str_cmd_cat
+    .word do_cat
     .word 0                     ; End of table marker
 
 ;-------------------------------------------------------------------

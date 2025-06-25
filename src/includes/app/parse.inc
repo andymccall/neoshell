@@ -15,67 +15,48 @@ ZP_TEMP         = $F8   ; A general-purpose temporary byte
 ; Destroys: a, x, y
 ;-------------------------------------------------------------------
 parse_input:
-    ldx #0                  ; X is the buffer index
-
-    ; --- Step 1: Skip leading spaces to find the command ---
-@skip_loop:
+    ldx #0
+@skip_parse_loop:
     lda INPUT_BUFFER, x
-    bne @not_empty_line     ; Branch if not zero (not an empty line)
-    jmp @parse_done         ; It was zero, so jump to the end.
+    bne @not_empty_line
+    jmp @parse_done
 @not_empty_line:
     cmp #' '
     bne @token_start
     inx
-    jmp @skip_loop
+    jmp @skip_parse_loop
 
 @token_start:
-    ; --- Step 2: Loop through the command table ---
-    ldy #0                  ; Y is the index into the command table
+    ldy #0
 @command_loop:
-    ; Check for end of table marker (a null pointer).
     lda command_table, y
     ora command_table+1, y
     beq @not_found
-    
-    ; Get pointer to the command string from the table
     lda command_table, y
     sta ZP_PTR_LO
     lda command_table+1, y
     sta ZP_PTR_HI
-    
-    ; Compare user input (from X) with table command
-    phx                     ; Save user's buffer index (X)
-    phy                     ; Save command table index (Y)
-
-    ldy #0                  ; Use inner Y as the shared string index
+    phx
+    phy
+    ldy #0
 @compare_loop:
-    lda (ZP_PTR_LO), y      ; Get char from table command
-    beq @command_part_matched ; If it's null, the command word matches.
-
-    lda INPUT_BUFFER, x     ; Get char from user input
-    cmp (ZP_PTR_LO), y      ; Compare them
-    bne @no_match           ; If different, it's not a match
-
-    ; Characters match, so continue
+    lda (ZP_PTR_LO), y
+    beq @command_part_matched
+    lda INPUT_BUFFER, x
+    cmp (ZP_PTR_LO), y
+    bne @no_match
     inx
     iny
     jmp @compare_loop
-    
 @command_part_matched:
-    ; The command word matches. Check if the user's token ends here.
     lda INPUT_BUFFER, x
     cmp #' '
     beq @execute_match
     cmp #0
     beq @execute_match
-    ; If it doesn't end here (e.g., user typed "clears"), it's not a match
-    jmp @no_match
-
 @no_match:
-    ply                     ; Restore command table index (Y)
-    plx                     ; Restore user buffer index (X)
-    
-    ; Advance Y to the next command entry in the table
+    ply
+    plx
     tya
     clc
     adc #4
@@ -83,28 +64,23 @@ parse_input:
     jmp @command_loop
 
 @execute_match:
-    ; We have a valid match. X now points to the start of the arguments.
-    ply                     ; Restore original command table index Y
-    pla                     ; *** FIX: Pop the original X off the stack and discard it.
-                            ; The X register now correctly holds the argument pointer.
-    
-    ; Get the handler address (offset is original Y + 2 bytes)
+    ply
+    ; *** FIX: Use PLA instead of PLX to balance the stack
+    ; and correctly preserve the argument pointer in X.
+    pla
     tya
     clc
     adc #2
     tay
-    lda command_table, y    ; Get handler low byte
+    lda command_table, y
     sta ZP_JUMP_VEC
     iny
-    lda command_table, y    ; Get handler high byte
+    lda command_table, y
     sta ZP_JUMP_VEC+1
-    
-    ; X correctly points to the start of the arguments.
     jsr execute_handler
-    rts                     ; Command finished, return from parser
+    rts
 
 @not_found:
-    ; --- No Match Found in entire table ---
     lda #<str_cmd_not_found
     sta ZP_PTR_LO
     lda #>str_cmd_not_found

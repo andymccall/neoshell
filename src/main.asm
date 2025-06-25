@@ -23,6 +23,9 @@
    .include "includes/app/echo.inc"
    .include "includes/app/ls.inc"
    .include "includes/app/cwd.inc"
+   .include "includes/app/mkdir.inc"
+   .include "includes/app/cd.inc"
+   .include "includes/app/cat.inc"
 
 ;---------------------------------------------------------------
 ; Menu equates
