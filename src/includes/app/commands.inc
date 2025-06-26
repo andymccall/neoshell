@@ -17,6 +17,8 @@ str_cmd_cd:
     .asciiz "cd"
 str_cmd_cat:
     .asciiz "cat"
+str_cmd_cp:
+    .asciiz "cp"
 
 command_table:
     .word str_cmd_help          ; String to match
@@ -37,6 +39,8 @@ command_table:
     .word do_cd
     .word str_cmd_cat
     .word do_cat
+    .word str_cmd_cp
+    .word do_cp
     .word 0                     ; End of table marker
 
 ;-------------------------------------------------------------------

@@ -48,6 +48,10 @@ The project is in the early stages of development. The core command parser and d
 
 * `cwd`: Displays the current working directory.
 
+* `cat [args]`: Outputs a file to the console.
+
+* `cp <a> <b>`: Copies file <a> to file <b>.
+
 * `exit`: Halts the shell.
 
 ---

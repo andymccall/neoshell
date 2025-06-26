@@ -5,6 +5,10 @@ str_file_found:
     .asciiz " found"
 str_file_not_found:
     .asciiz " not found"
+str_debug_cat:
+    .asciiz "File opened, attempting to read..."
+str_cat_debug:
+    .asciiz "Trying to cat file: "
 
 do_cat:
     ; --- Step 1: Get the filename argument ---
@@ -20,8 +24,6 @@ do_cat:
     jmp @skip_cat_spaces
 
 @cat_arg_found:
-    ; The filename starts at index X. We need to create a
-    ; length-prefixed string for the file open API.
     stx ZP_TOKEN_START
     ldy #0
 @find_cat_arg_end:
@@ -54,12 +56,17 @@ do_cat:
 
 @copy_cat_done:
     ; --- Step 2: Open the file ---
-    lda #<DIR_ENTRY_BUFFER
+    ; Param 0: File channel to use (e.g., channel 1)
+    ; Param 1,2: Pointer to length-prefixed filename
+    ; Param 3: Mode (0 = read-only)
+    lda #1                      ; Use file channel 1
     sta API_PARAMETERS+0
-    lda #>DIR_ENTRY_BUFFER
+    lda #<DIR_ENTRY_BUFFER
     sta API_PARAMETERS+1
-    lda #1
+    lda #>DIR_ENTRY_BUFFER
     sta API_PARAMETERS+2
+    lda #0                      ; Mode 0 = read-only
+    sta API_PARAMETERS+3
 
     lda #API_FN_FILE_OPEN
     sta API_FUNCTION
@@ -72,8 +79,11 @@ do_cat:
     lda API_COMMAND
     bne @wait_cat_open_done
 
+    ; The API returns the handle in API_PARAMETERS+0 if successful.
     lda API_PARAMETERS+0
-    beq @cat_error
+    cmp #1
+    bne @cat_error
+    
     sta ZP_FILE_HANDLE
 
     ; --- Step 3: Read from file in a loop ---
@@ -87,9 +97,9 @@ do_cat:
     lda #>DIR_ENTRY_BUFFER
     sta API_PARAMETERS+2
     ; Param 3,4: Number of bytes to read (16-bit)
-    lda #$FF                ; Read up to 255 bytes (low byte)
+    lda #$FF
     sta API_PARAMETERS+3
-    lda #$00                ; (high byte)
+    lda #$00
     sta API_PARAMETERS+4
     
     lda #API_FN_FILE_READ
@@ -103,14 +113,11 @@ do_cat:
     lda API_COMMAND
     bne @wait_cat_read_done
     
-    ; Number of bytes actually read is in API_PARAMETERS+3,4
-    ; We only need to check the low byte since we read < 256 bytes.
     lda API_PARAMETERS+3
-    beq @close_cat_file     ; If 0, we've reached the end of the file
+    beq @close_cat_file
     
     sta ZP_BYTE_COUNT
     
-    ; Print the bytes we just read
     ldy #0
 @cat_print_loop:
     cpy ZP_BYTE_COUNT
@@ -130,6 +137,7 @@ do_cat:
     rts
 
 @close_cat_file:
+    ; --- Step 4: Close the file ---
     lda ZP_FILE_HANDLE
     sta API_PARAMETERS+0
     lda #API_FN_FILE_CLOSE
@@ -142,6 +150,8 @@ do_cat:
 @wait_cat_close_done:
     lda API_COMMAND
     bne @wait_cat_close_done
+    
+    jsr br_text_print_new_line
     
 @cat_done:
     rts

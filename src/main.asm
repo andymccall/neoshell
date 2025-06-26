@@ -26,6 +26,7 @@
    .include "includes/app/mkdir.inc"
    .include "includes/app/cd.inc"
    .include "includes/app/cat.inc"
+   .include "includes/app/cp.inc"
 
 ;---------------------------------------------------------------
 ; Menu equates

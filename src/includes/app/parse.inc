@@ -158,3 +158,57 @@ br_text_print_byte:
     jsr br_text_print_char
     ply                 ; *** FIX: Restore original Y register from stack
     rts
+
+get_next_argument_lp:
+@skip_arg_spaces:
+    lda INPUT_BUFFER, x
+    beq @no_more_args
+    cmp #' '
+    bne @arg_start
+    inx
+    jmp @skip_arg_spaces
+@arg_start:
+    stx ZP_TOKEN_START
+    ldy #0
+@find_arg_end:
+    lda INPUT_BUFFER, x
+    beq @arg_len_found
+    cmp #' '
+    beq @arg_len_found
+    iny
+    inx
+    jmp @find_arg_end
+@arg_len_found:
+    phy                     ; Save length (Y)
+    
+    ; Get pointer to destination buffer from ZP_PTR_LO/HI
+    lda ZP_PTR_LO
+    sta ZP_PTR2_LO
+    lda ZP_PTR_HI
+    sta ZP_PTR2_HI
+    
+    ; Store length as the first byte of the destination buffer
+    tya
+    sta (ZP_PTR2_LO)
+    
+    ; Copy the argument string itself
+    ldx ZP_TOKEN_START
+    ldy #1
+@copy_arg_loop:
+    lda INPUT_BUFFER, x
+    cmp #' '
+    beq @copy_arg_done
+    cmp #0
+    beq @copy_arg_done
+    sta (ZP_PTR2_LO),y
+    inx
+    iny
+    jmp @copy_arg_loop
+
+@copy_arg_done:
+    ply                     ; Restore length
+    clc                     ; Success
+    rts
+@no_more_args:
+    sec                     ; Failure
+    rts
