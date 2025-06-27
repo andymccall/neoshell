@@ -17,7 +17,7 @@ all:
 	mkdir -p bin
 	mkdir -p lst
 	mkdir -p map
-	$(CL65) --static-locals -t none -C src/includes/system/neo6502.cfg -O --cpu 65c02 -l lst/$(NAME).lst -m map/$(NAME).map -o bin/$(NAME).bin src/main.asm src/includes/system/neo6502.lib
+	$(CL65) --static-locals -t none -C src/lib/system/neo6502.cfg -O --cpu 65c02 -l lst/$(NAME).lst -m map/$(NAME).map -o bin/$(NAME).bin src/main.asm src/lib/system/neo6502.lib
 	python3 $(NEO_HOME)exec.zip bin/$(NAME).bin@800 run@800 -o"bin/$(NAME).neo"
 	rm bin/$(NAME).bin
 

@@ -1,38 +1,40 @@
-DIR_ENTRY_BUFFER = $0400 ; Buffer to hold directory entry data
-
-str_root_dir:
-    .asciiz "/"
-str_open_dir_err:
-    .asciiz "Error opening directory"
+; ===============================================================
+; LS (List Directory) Command
+;
+; This file contains the command handler for the built-in 'ls'
+; command.
+; ===============================================================
 
 ;-------------------------------------------------------------------
 ; Name: do_ls
 ;-------------------------------------------------------------------
-; Description: Lists files in a directory. Currently hardcoded to
-;              list the root directory "/".
+; Description: Lists files in the current directory. This version
+;              uses the high-level API_FN_LIST_DIRECTORY function to
+;              avoid a bug in the emulator's low-level directory
+;              read implementation. The -l flag is temporarily
+;              disabled for stability.
+; Inputs: X = index in INPUT_BUFFER where arguments start.
+; Returns: None
+; Destroys: a, x
 ;-------------------------------------------------------------------
 do_ls:
-    ; This function uses API_FN_LIST_DIRECTORY. We assume it takes
-    ; a pointer to a path string (params 0,1) and a pointer to a
-    ; destination buffer (params 2,3) where it will write the
-    ; complete, formatted directory listing.
-
     ; --- Step 1: Clear the destination buffer ---
     ldx #0
 @clear_ls_buf:
     lda #0
     sta DIR_ENTRY_BUFFER, x
     inx
-    cpx #INPUT_BUFFER_SIZE  ; Reusing this size constant for now
+    cpx #INPUT_BUFFER_SIZE
     bne @clear_ls_buf
 
     ; --- Step 2: Set up API parameters ---
+    ; We'll list the current directory, ".".
     ; Param 0-1: Pointer to the directory path string
-    lda #<str_root_dir
-    sta API_PARAMETERS+0
-    lda #>str_root_dir
-    sta API_PARAMETERS+1
     ; Param 2-3: Pointer to the destination buffer
+    lda #<str_dot
+    sta API_PARAMETERS+0
+    lda #>str_dot
+    sta API_PARAMETERS+1
     lda #<DIR_ENTRY_BUFFER
     sta API_PARAMETERS+2
     lda #>DIR_ENTRY_BUFFER
@@ -57,6 +59,9 @@ do_ls:
     lda #>DIR_ENTRY_BUFFER
     sta ZP_PTR_HI
     jsr br_text_print_string
-    ; No extra newline needed if the API provides a formatted list.
     
     rts
+
+; --- Data for ls command ---
+str_dot:
+    .asciiz "."

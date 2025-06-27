@@ -1,8 +1,10 @@
 ; ===============================================================
-; Definitions
+; User Input Handler
+;
+; This file contains the main routine for reading a line of user
+; input from the keyboard, handling backspace, and storing the
+; result in the INPUT_BUFFER.
 ; ===============================================================
-INPUT_BUFFER    = $0300 ; Start address of our input buffer in RAM
-INPUT_BUFFER_SIZE = 255 ; Size of the input buffer
 
 ;-------------------------------------------------------------------
 ; Name: get_input
@@ -12,43 +14,36 @@ INPUT_BUFFER_SIZE = 255 ; Size of the input buffer
 ;              Input is stored in INPUT_BUFFER and is terminated
 ;              when the user presses Enter ($0D). The buffer will
 ;              be null-terminated upon completion.
-;-------------------------------------------------------------------
 ; Inputs: None
 ; Returns: None
 ; Destroys: a, x
 ;-------------------------------------------------------------------
 get_input:
-    ldx #0                  ; Use X as the index for our input buffer.
-@clear_loop:
+    ; --- First, clear the input buffer before accepting new input ---
+    ldx #0
+@clear_input_loop:
     lda #0
     sta INPUT_BUFFER, x
     inx
     cpx #INPUT_BUFFER_SIZE
-    bne @clear_loop
-
+    bne @clear_input_loop
     ldx #0                  ; Reset X to 0 for reading input.
-
 
 @read_loop:
     ; --- Call API to read a single character ---
-    @wait_api_ready:
-        lda API_COMMAND
-        bne @wait_api_ready
-
+@wait_get_api_ready:
+    lda API_COMMAND
+    bne @wait_get_api_ready
     lda #API_FN_READ_CHAR
     sta API_FUNCTION
     lda #API_GROUP_CONSOLE
     sta API_COMMAND
-
-    @wait_api_done:
-        lda API_COMMAND
-        bne @wait_api_done
-
-    ; The character is now ready in the API parameters.
-    lda API_PARAMETERS + 0
+@wait_get_api_done:
+    lda API_COMMAND
+    bne @wait_get_api_done
     
-    ; --- Check if a key was actually pressed ---
-    beq @read_loop
+    lda API_PARAMETERS + 0
+    beq @read_loop          ; If API returned 0, no key was pressed. Loop.
 
     ; --- Check for special characters ---
     cmp #$0D                ; Is it Enter?

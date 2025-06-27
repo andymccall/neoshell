@@ -1,58 +1,67 @@
-.include "includes/system/neo6502.asm"
+; ===============================================================
+; NeoShell - Main Program
+;
+; Author: Andy McCall, mailme@andymccall.co.uk
+; Date:   27/06/2025
+;
+; This is the main entry point for the NeoShell project. It
+; includes all necessary libraries and application modules,
+; and contains the main application loop.
+; ===============================================================
+
+.include "lib/system/neo6502.asm"
 
 .org $800
 .segment "STARTUP"
 
    jmp start
 
-; API includes
-   .include "includes/api/br_text.inc"
-   .include "includes/api/br_screen.inc"
-   .include "includes/api/br_graphics.inc"
-   .include "includes/api/br_debug.inc"
+; ===============================================================
+; Project-Specific Includes
+; ===============================================================
 
-; App includes
-   .include "includes/app/constants.inc"
-   .include "includes/app/prompt.inc"
-   .include "includes/app/version.inc"
-   .include "includes/app/input.inc"
-   .include "includes/app/parse.inc"
-   .include "includes/app/commands.inc"
-   .include "includes/app/clear.inc"
-   .include "includes/app/exit.inc"
-   .include "includes/app/echo.inc"
-   .include "includes/app/ls.inc"
-   .include "includes/app/cwd.inc"
-   .include "includes/app/mkdir.inc"
-   .include "includes/app/cd.inc"
-   .include "includes/app/cat.inc"
-   .include "includes/app/cp.inc"
+; --- Core Definitions ---
+.include "includes/definitions.inc"
 
-;---------------------------------------------------------------
-; Menu equates
-;---------------------------------------------------------------
-;
+; --- Libraries ---
+.include "lib/text.inc"
+.include "lib/argument.inc"
+
+; --- Application Modules ---
+.include "app/get_input.inc"
+.include "app/print_prompt.inc"
+.include "app/commands/commands.inc"
+
+; --- Command Handlers ---
+.include "app/commands/help.inc"
+.include "app/commands/clear.inc"
+.include "app/commands/exit.inc"
+.include "app/commands/echo.inc"
+.include "app/commands/cwd.inc"
+.include "app/commands/ls.inc"
+.include "app/commands/mkdir.inc"
+.include "app/commands/cd.inc"
+.include "app/commands/cat.inc"
+.include "app/commands/cp.inc"
+
+; --- Parser (must be included AFTER command handlers) ---
+.include "app/parse_input.inc"
+
 start:
 
-   jsr br_screen_clear
-
-   jsr print_version_info
-   jsr br_text_print_new_line
-
+; ===============================================================
+; Main Program Entry Point
+; ===============================================================
+main:
+    ; This is the main application loop. It demonstrates how to use
+    ; the various subroutines to build a simple command shell.
 app_loop:
-  
-   jsr print_prompt
-
-   jsr get_input
-
-   ;lda #<INPUT_BUFFER
-   ;sta ZP_PTR_LO
-   ;lda #>INPUT_BUFFER
-   ;sta ZP_PTR_HI
-   ;jsr br_text_print_string_nl
-   
-   jsr parse_input
+    jsr print_prompt        ; Show "neoshell> "
+    jsr get_input           ; Read a line of text from the user
+    jsr parse_input         ; Parse the input and execute commands
+    jmp app_loop            ; Loop forever
 
 done:
-   jmp app_loop
+    ; This is the final halt point for the 'exit' command.
+    jmp done
 

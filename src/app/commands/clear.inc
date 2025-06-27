@@ -1,31 +1,29 @@
+; ===============================================================
+; Clear Command
+;
+; This file contains the command handler for the built-in 'clear'
+; command.
+; ===============================================================
+
 ;-------------------------------------------------------------------
-; Name: br_screen_clear
+; Name: do_clear
 ;-------------------------------------------------------------------
 ; Description: Clears the screen by calling the relevant API
 ;              function.
-; Note: 
-; URL:
-;-------------------------------------------------------------------
 ; Inputs: None
 ; Returns: None
 ; Destroys: a
 ;-------------------------------------------------------------------
-br_screen_clear:
+do_clear:
     lda #API_FN_CLEAR_SCREEN
     sta API_FUNCTION
-
-; Wait for any previous API command to finish
-@wait_api_ready:
+@wait_cls_api_ready:
     lda API_COMMAND
-    bne @wait_api_ready
+    bne @wait_cls_api_ready
 
-    ; Issue the clear screen command
     lda #API_GROUP_CONSOLE
     sta API_COMMAND
-
-; Wait for OUR clear screen command to finish
-@wait_api_done:
+@wait_cls_api_done:
     lda API_COMMAND
-    bne @wait_api_done
-    
+    bne @wait_cls_api_done
     rts

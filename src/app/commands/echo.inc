@@ -1,14 +1,20 @@
+; ===============================================================
+; Echo Command
+;
+; This file contains the command handler for the built-in 'echo'
+; command.
+; ===============================================================
+
 ;-------------------------------------------------------------------
 ; Name: do_echo
 ;-------------------------------------------------------------------
 ; Description: Prints the arguments that follow the "echo" command.
 ; Inputs: X = index in INPUT_BUFFER where arguments start.
+; Returns: None
+; Destroys: a
 ;-------------------------------------------------------------------
 do_echo:
-    ; The X register holds the index of the character just after the
-    ; "echo" command token (usually a space).
-    ; We need to skip any additional spaces to find the real start
-    ; of the arguments.
+    ; --- Step 1: Find the start of the arguments ---
 @skip_echo_spaces:
     lda INPUT_BUFFER, x
     cmp #' '
@@ -17,8 +23,7 @@ do_echo:
     jmp @skip_echo_spaces
 
 @args_found:
-    ; X now points to the start of the arguments.
-    ; Set ZP_PTR to point to this location.
+    ; --- Step 2: Set up a pointer to the arguments and print ---
     txa
     clc
     adc #<INPUT_BUFFER
@@ -27,7 +32,6 @@ do_echo:
     adc #0
     sta ZP_PTR_HI
     
-    ; Print the rest of the buffer and a newline.
     jsr br_text_print_string
     jsr br_text_print_new_line
     rts

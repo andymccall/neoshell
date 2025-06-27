@@ -1,60 +1,33 @@
-ZP_FILE_HANDLE  = $F7   ; A dedicated ZP location for the cat file handle
-ZP_BYTE_COUNT   = $F8   ; A dedicated ZP location for the cat byte count
+; ===============================================================
+; CAT Command
+;
+; This file contains the command handler for the built-in 'cat'
+; command, which prints the contents of a file to the screen.
+; ===============================================================
 
-str_file_found:
-    .asciiz " found"
-str_file_not_found:
-    .asciiz " not found"
-str_debug_cat:
-    .asciiz "File opened, attempting to read..."
-str_cat_debug:
-    .asciiz "Trying to cat file: "
-
+;-------------------------------------------------------------------
+; Name: do_cat
+;-------------------------------------------------------------------
+; Description: Opens a file and prints its contents to the screen.
+;              This version is now refactored to use the shared
+;              get_next_argument_lp helper function.
+; Inputs: X = index in INPUT_BUFFER where arguments start.
+; Returns: None
+; Destroys: a, x, y
+;-------------------------------------------------------------------
 do_cat:
     ; --- Step 1: Get the filename argument ---
-@skip_cat_spaces:
-    lda INPUT_BUFFER, x
-    bne @cat_has_filename
-    jmp @cat_done
+    ; Use the helper function to get the first argument and create
+    ; a length-prefixed string in DIR_ENTRY_BUFFER.
+    lda #<DIR_ENTRY_BUFFER
+    sta ZP_PTR_LO
+    lda #>DIR_ENTRY_BUFFER
+    sta ZP_PTR_HI
+    jsr get_next_argument_lp
+    bcc @cat_has_arg
+    rts ; No argument given, so just return
 
-@cat_has_filename:
-    cmp #' '
-    bne @cat_arg_found
-    inx
-    jmp @skip_cat_spaces
-
-@cat_arg_found:
-    stx ZP_TOKEN_START
-    ldy #0
-@find_cat_arg_end:
-    cpx #INPUT_BUFFER_SIZE
-    beq @cat_arg_len_found
-
-    lda INPUT_BUFFER, x
-    cmp #' '
-    beq @cat_arg_len_found
-    cmp #0
-    beq @cat_arg_len_found
-    iny
-    inx
-    jmp @find_cat_arg_end
-
-@cat_arg_len_found:
-    sty DIR_ENTRY_BUFFER
-    ldx ZP_TOKEN_START
-    ldy #1
-@copy_cat_loop:
-    lda INPUT_BUFFER, x
-    cmp #' '
-    beq @copy_cat_done
-    cmp #0
-    beq @copy_cat_done
-    sta DIR_ENTRY_BUFFER, y
-    inx
-    iny
-    jmp @copy_cat_loop
-
-@copy_cat_done:
+@cat_has_arg:
     ; --- Step 2: Open the file ---
     ; Param 0: File channel to use (e.g., channel 1)
     ; Param 1,2: Pointer to length-prefixed filename
@@ -97,9 +70,9 @@ do_cat:
     lda #>DIR_ENTRY_BUFFER
     sta API_PARAMETERS+2
     ; Param 3,4: Number of bytes to read (16-bit)
-    lda #$FF
+    lda #$FF                ; Read up to 255 bytes (low byte)
     sta API_PARAMETERS+3
-    lda #$00
+    lda #$00                ; (high byte)
     sta API_PARAMETERS+4
     
     lda #API_FN_FILE_READ
@@ -113,11 +86,13 @@ do_cat:
     lda API_COMMAND
     bne @wait_cat_read_done
     
+    ; Number of bytes actually read is in API_PARAMETERS+3,4
     lda API_PARAMETERS+3
-    beq @close_cat_file
+    beq @close_cat_file     ; If 0, we've reached the end of the file
     
     sta ZP_BYTE_COUNT
     
+    ; Print the bytes we just read
     ldy #0
 @cat_print_loop:
     cpy ZP_BYTE_COUNT
@@ -152,6 +127,4 @@ do_cat:
     bne @wait_cat_close_done
     
     jsr br_text_print_new_line
-    
-@cat_done:
     rts
