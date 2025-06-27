@@ -43,6 +43,8 @@
 .include "app/commands/cd.inc"
 .include "app/commands/cat.inc"
 .include "app/commands/cp.inc"
+.include "app/commands/rm.inc"
+.include "app/commands/mv.inc"
 
 ; --- Parser (must be included AFTER command handlers) ---
 .include "app/parse_input.inc"

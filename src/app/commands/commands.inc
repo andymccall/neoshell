@@ -29,6 +29,10 @@ str_cmd_cat:
     .asciiz "cat"
 str_cmd_cp:
     .asciiz "cp"
+str_cmd_rm:
+    .asciiz "rm"
+str_cmd_mv:
+    .asciiz "mv"
 
 ; --- Command Error and Info Strings ---
 str_cmd_not_found:
@@ -45,6 +49,10 @@ str_file_open_err:
     .asciiz "Error opening file"
 str_copy_err:
     .asciiz "Error copying file"
+str_rm_err:
+    .asciiz "Error deleting file"
+str_mv_err:
+    .asciiz "Error moving file"
 str_prompt:
     .asciiz "$ > "
 
@@ -91,4 +99,10 @@ command_table:
     .word str_cmd_cp            ; String to match
     .word do_cp                 ; Address of the handler function
     
+    .word str_cmd_rm            ; String to match
+    .word do_rm                 ; Address of the handler function
+
+    .word str_cmd_mv            ; String to match
+    .word do_mv                 ; Address of the handler function
+
     .word 0                     ; End of table marker
