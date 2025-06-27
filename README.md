@@ -6,6 +6,8 @@ A modern, usable, and extensible command-line shell for the Neo6502 computer, wr
 
 NeoShell aims to bring a more powerful and familiar command-line experience, similar to traditional Unix-like shells, to the Neo6502 platform. The primary goal is to make the system more "usable" for developers and power users by providing a robust environment for file system management, program execution, and system interaction.
 
+![NeoShell Screenshot](https://github.com/andymccall/neoshell/blob/main/assets/screenshot.png?raw=true)
+
 ## ✨ Features
 
 ### 🎯 Core Features
@@ -40,19 +42,22 @@ The project is in the early stages of development. The core command parser and d
 
 * `echo [args]`: Prints arguments to the screen.
 
-* `ls`: Lists the currect directory contents
+* `ls`: Lists the current directory contents.
 
-* `cd <dir>`: Changes to the directory given in the argument
+* `cd <dir>`: Changes to the directory given in the argument.
 
 * `mkdir <dir>`: Creates the directory given in the argument.
 
 * `cwd`: Displays the current working directory.
 
-* `cat [args]`: Outputs a file to the console.
+* `cat [file]`: Outputs a file to the console.
 
-* `cp <a> <b>`: Copies file <a> to file <b>.
+* `cp <source> <destination>`: Copies file `<source>` to file `<destination>`.
+
+* `mv <source> <destination>`: Moves (renames) a file.
+
+* `rm <file>`: Deletes a file or empty directory.
 
 * `exit`: Halts the shell.
 
----
 *This README will be updated as the project progresses.*
